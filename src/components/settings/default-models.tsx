@@ -36,7 +36,7 @@ export function DefaultModels() {
         Default Models
       </h2>
       <p className="font-[family-name:var(--font-body)] text-xs text-[var(--text-muted)] mb-5">
-        Pre-selected models for new pipeline steps. You can always change per-step.
+        This model is used when the AI generates pipeline steps for you, and as the default for any new step you add manually. You can always override it per-step.
       </p>
 
       <div className="flex flex-col gap-4">
@@ -58,7 +58,7 @@ export function DefaultModels() {
               <optgroup key={group.id} label={group.name}>
                 {group.models.map((model) => (
                   <option key={model.id} value={model.id}>
-                    {model.name} ({model.role})
+                    {model.name} ({model.role}){model.recommended ? ' — recommended' : ''}
                   </option>
                 ))}
               </optgroup>

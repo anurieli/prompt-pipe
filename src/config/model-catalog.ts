@@ -11,6 +11,7 @@ export type CuratedModel = {
   id: string
   name: string
   role: ModelRole
+  recommended?: boolean
 }
 
 export type ProviderGroup = {
@@ -45,6 +46,8 @@ export const MODEL_CATALOG: ProviderGroup[] = [
     models: [
       { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', role: 'fast' },
       { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', role: 'flagship' },
+      { id: 'google/gemini-3.0-flash', name: 'Gemini 3.0 Flash', role: 'fast', recommended: true },
+      { id: 'google/gemini-3.1-pro', name: 'Gemini 3.1 Pro', role: 'flagship' },
     ],
   },
   {
@@ -65,14 +68,24 @@ export const MODEL_CATALOG: ProviderGroup[] = [
   },
 ]
 
-/** Returns the first flagship model ID (Sonnet 4.6) */
+/** Returns the recommended model, or first flagship as fallback */
 export function getDefaultModel(): string {
+  for (const group of MODEL_CATALOG) {
+    for (const model of group.models) {
+      if (model.recommended) return model.id
+    }
+  }
   for (const group of MODEL_CATALOG) {
     for (const model of group.models) {
       if (model.role === 'flagship') return model.id
     }
   }
   return 'anthropic/claude-sonnet-4.6'
+}
+
+/** Returns the recommended model entry */
+export function getRecommendedModel(): CuratedModel | undefined {
+  return getAllCuratedModels().find((m) => m.recommended)
 }
 
 /** Flat list of all curated models */
