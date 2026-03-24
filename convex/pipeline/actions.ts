@@ -94,6 +94,12 @@ export const runPipeline = action({
       return
     }
 
+    // Load default model from settings for fallback
+    const defaultModelSetting = await ctx.runQuery(internal.settings.internalQueries.getSettingValue, {
+      key: 'default_text_model',
+    }) as string | null
+    const defaultModel = defaultModelSetting ?? ''
+
     // Load steps with threads
     const steps = await ctx.runQuery(api.steps.queries.listByIdea, { ideaId })
     if (steps.length === 0) {
@@ -214,6 +220,12 @@ export const runPipeline = action({
           }
           const resolvedPrompt = resolveVariables(thread.promptTemplate, context)
 
+          // Resolve model with fallback to default
+          const effectiveModel = thread.model || defaultModel
+          if (!effectiveModel) {
+            throw new Error(`No model configured for thread "${thread.name}" and no default model set in Settings`)
+          }
+
           // Get API key and create adapter
           const apiKey = await getDecryptedApiKey(ctx, thread.provider)
           let result: { output: OutputMedia; tokenUsage?: { input: number; output: number }; costUsd: number; durationMs: number }
@@ -222,7 +234,7 @@ export const runPipeline = action({
             const adapter = createOpenRouterAdapter(apiKey)
             result = await adapter.execute({
               prompt: resolvedPrompt,
-              model: thread.model ?? '',
+              model: effectiveModel,
               outputFormat: thread.outputFormat ?? undefined,
               temperature: thread.config.temperature,
               maxTokens: thread.config.maxTokens,
@@ -231,10 +243,10 @@ export const runPipeline = action({
             })
           } else if (thread.provider === 'webhook') {
             // For webhook, we'd need the URL from config — simplified for now
-            const adapter = createWebhookAdapter(thread.model ?? '')
+            const adapter = createWebhookAdapter(effectiveModel)
             result = await adapter.execute({
               prompt: resolvedPrompt,
-              model: thread.model ?? '',
+              model: effectiveModel,
               responseType: thread.config.responseType ?? 'text',
             })
           } else {

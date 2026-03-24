@@ -103,6 +103,7 @@ export function QueueList() {
 
   const handleDelete = useCallback(
     (id: string) => {
+      if (!window.confirm('Delete this idea and all its pipeline data? This cannot be undone.')) return
       removeIdea({ id: id as Id<'ideas'> })
       if (activeIdeaId === id) {
         setActiveIdea(null)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { useQuery, useAction } from 'convex/react'
+import { useQuery, useAction, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useUIStore } from '@/stores/ui-store'
 import { MediaOutput } from '@/components/output/media-output'
@@ -74,11 +74,11 @@ export function RightPanel() {
   const outputStep = outputStepIndex !== null ? stepList[outputStepIndex] : null
 
   const outputs = useMemo(() => {
-    const result: Array<{ threadName: string; output: OutputMedia }> = []
+    const result: Array<{ threadId: string; threadName: string; output: OutputMedia; activeThreadRunId?: string }> = []
     if (outputStep) {
       for (const thread of outputStep.threads) {
         if (thread.output) {
-          result.push({ threadName: thread.name, output: thread.output as OutputMedia })
+          result.push({ threadId: thread._id, threadName: thread.name, output: thread.output as OutputMedia, activeThreadRunId: thread.activeThreadRunId })
         }
       }
     }
@@ -178,7 +178,7 @@ export function RightPanel() {
 
 /* ---- Output sub-panel ---- */
 
-type StepDoc = { _id: string; name: string; threads: Array<{ output?: unknown; name: string }> }
+type StepDoc = { _id: string; name: string; threads: Array<{ _id: string; output?: unknown; name: string; activeThreadRunId?: string }> }
 
 function OutputPanel({
   stepList,
@@ -192,7 +192,7 @@ function OutputPanel({
   stepList: StepDoc[]
   outputStepIndex: number | null
   setSelectedOutputStepIndex: (idx: number | null) => void
-  outputs: Array<{ threadName: string; output: OutputMedia }>
+  outputs: Array<{ threadId: string; threadName: string; output: OutputMedia; activeThreadRunId?: string }>
   hasOutput: boolean
   copyFeedback: boolean
   handleCopy: () => void
@@ -263,15 +263,15 @@ function OutputPanel({
       <div className="px-4 py-4">
         {hasOutput ? (
           <div className="flex flex-col gap-4">
-            {outputs.map((o, i) => (
-              <div key={i}>
-                {outputs.length > 1 && (
-                  <p className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--text-muted)] uppercase tracking-[0.06em] mb-2">
-                    {o.threadName}
-                  </p>
-                )}
-                <MediaOutput media={o.output} />
-              </div>
+            {outputs.map((o) => (
+              <ThreadOutputWithHistory
+                key={o.threadId}
+                threadId={o.threadId}
+                threadName={o.threadName}
+                output={o.output}
+                activeThreadRunId={o.activeThreadRunId}
+                showThreadName={outputs.length > 1}
+              />
             ))}
           </div>
         ) : (
@@ -293,6 +293,81 @@ function OutputPanel({
         )}
       </div>
     </>
+  )
+}
+
+/* ---- Thread output with run history pills ---- */
+
+function ThreadOutputWithHistory({
+  threadId,
+  threadName,
+  output,
+  activeThreadRunId,
+  showThreadName,
+}: {
+  threadId: string
+  threadName: string
+  output: OutputMedia
+  activeThreadRunId?: string
+  showThreadName: boolean
+}) {
+  const runs = useQuery(
+    api.threadRuns.queries.listByThread,
+    { threadId: threadId as Id<'stepThreads'>, limit: 10 },
+  )
+  const selectRun = useMutation(api.threadRuns.mutations.selectAsActive)
+
+  const completedRuns = useMemo(() => {
+    if (!runs) return []
+    return runs.filter((r) => r.status === 'done')
+  }, [runs])
+
+  const handleSelectRun = useCallback(
+    async (runId: string) => {
+      await selectRun({ threadRunId: runId as Id<'threadRuns'> })
+    },
+    [selectRun],
+  )
+
+  return (
+    <div>
+      {showThreadName && (
+        <p className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--text-muted)] uppercase tracking-[0.06em] mb-2">
+          {threadName}
+        </p>
+      )}
+      {completedRuns.length > 1 && (
+        <div className="flex items-center gap-1 mb-3 flex-wrap">
+          <span className="font-[family-name:var(--font-mono)] text-[9px] text-[var(--text-faint)] uppercase tracking-[0.06em] mr-1">
+            Runs
+          </span>
+          {completedRuns.map((run, idx) => {
+            const runNumber = completedRuns.length - idx
+            const isActive = activeThreadRunId === run._id
+            const timeLabel = run.completedAt
+              ? new Date(run.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : `#${runNumber}`
+            return (
+              <button
+                key={run._id}
+                type="button"
+                onClick={() => handleSelectRun(run._id)}
+                title={`Run ${runNumber}${run.completedAt ? ` — ${new Date(run.completedAt).toLocaleString()}` : ''}`}
+                className={[
+                  'px-2 py-0.5 rounded-full text-[10px] font-[family-name:var(--font-mono)] cursor-pointer transition-all duration-150 border',
+                  isActive
+                    ? 'bg-[var(--accent-muted)] text-[var(--accent)] border-[var(--accent)]'
+                    : 'bg-[var(--surface-2)] text-[var(--text-faint)] border-[var(--border)] hover:text-[var(--text-muted)] hover:border-[var(--border-strong)]',
+                ].join(' ')}
+              >
+                {timeLabel}
+              </button>
+            )
+          })}
+        </div>
+      )}
+      <MediaOutput media={output} />
+    </div>
   )
 }
 

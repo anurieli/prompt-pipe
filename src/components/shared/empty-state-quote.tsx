@@ -20,10 +20,13 @@ export function EmptyStateQuote() {
 
   return (
     <div className="flex flex-col items-center justify-center h-full gap-6 p-10 max-w-[600px] mx-auto">
-      <blockquote className="font-[family-name:var(--font-display)] text-2xl text-[var(--text-muted)] italic text-center leading-relaxed">
+      <blockquote
+        suppressHydrationWarning
+        className="font-[family-name:var(--font-display)] text-2xl text-[var(--text-muted)] italic text-center leading-relaxed"
+      >
         &ldquo;{quote.text}&rdquo;
       </blockquote>
-      <p className="font-[family-name:var(--font-body)] text-sm text-[var(--text-muted)] opacity-50">
+      <p suppressHydrationWarning className="font-[family-name:var(--font-body)] text-sm text-[var(--text-muted)] opacity-50">
         &mdash; {quote.author}
       </p>
       <p className="font-[family-name:var(--font-body)] text-xs text-[var(--text-muted)] opacity-30 mt-4">
