@@ -8,6 +8,10 @@ You copy output from ChatGPT, paste it into Claude, tweak the prompt, paste that
 
 PromptPipe chains those steps into a reusable pipeline. One input triggers the whole sequence — research in Perplexity, synthesis in Claude, reformatting for LinkedIn — with the right model at each stage. You see every intermediate result, edit anything mid-flow, and rerun from any step without starting over.
 
+<p align="center">
+  <img src="public/screenshots/hero-pipeline.jpg" alt="PromptPipe — Content Multiplier pipeline with 4 steps producing a blog post, LinkedIn post, and Twitter thread from a single idea" width="100%" />
+</p>
+
 > **Early access.** This project is under active development. The core pipeline engine works, but expect rough edges — some features are partially implemented, the UI is functional but not polished, and things may need maintenance. If you fork this, expect to get your hands dirty. PRs and issues welcome.
 
 ---
