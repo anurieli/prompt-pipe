@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #111110;
+  --bg-warm: #16150f;
+  --surface: #1a1914;
+  --surface-2: #201f18;
+  --surface-3: #28271e;
+  --surface-hover: #2f2e24;
+  --border: rgba(255, 245, 200, 0.06);
+  --border-strong: rgba(255, 245, 200, 0.12);
+  --border-active: rgba(255, 200, 87, 0.25);
+  --text: #e8e4d9;
+  --text-secondary: #a8a48e;
+  --text-muted: #6b6753;
+  --text-faint: #4a4737;
+  --accent: #f0c446;
+  --accent-muted: rgba(240, 196, 70, 0.15);
+  --accent-strong: rgba(240, 196, 70, 0.25);
+  --orange: #e8854a;
+  --orange-muted: rgba(232, 133, 74, 0.15);
+  --blue: #6b9fd4;
+  --blue-muted: rgba(107, 159, 212, 0.12);
+  --teal: #5ab8a0;
+  --teal-muted: rgba(90, 184, 160, 0.12);
+  --green: #7cb87a;
+  --green-muted: rgba(124, 184, 122, 0.12);
+  --lavender: #a78bcc;
+  --lavender-muted: rgba(167, 139, 204, 0.12);
+  --rose: #d4727a;
+  --rose-muted: rgba(212, 114, 122, 0.12);
+  --red: #c9605a;
+  --red-muted: rgba(201, 96, 90, 0.12);
+  --r: 8px;
+  --r-lg: 12px;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'Outfit', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-warm: var(--bg-warm);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-active: var(--border-active);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-strong: var(--accent-strong);
+  --color-orange: var(--orange);
+  --color-orange-muted: var(--orange-muted);
+  --color-blue: var(--blue);
+  --color-blue-muted: var(--blue-muted);
+  --color-teal: var(--teal);
+  --color-teal-muted: var(--teal-muted);
+  --color-green: var(--green);
+  --color-green-muted: var(--green-muted);
+  --color-lavender: var(--lavender);
+  --color-lavender-muted: var(--lavender-muted);
+  --color-rose: var(--rose);
+  --color-rose-muted: var(--rose-muted);
+  --color-red: var(--red);
+  --color-red-muted: var(--red-muted);
+  --radius-default: var(--r);
+  --radius-lg: var(--r-lg);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--grain);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* Status dot pulse animation */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Modal entrance animation */
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Slide-down animation for step detail expand */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tooltip entrance animation */
+@keyframes tooltipIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Indeterminate progress bar animation */
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(200%); }
+  100% { transform: translateX(-100%); }
+}
