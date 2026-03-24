@@ -9,6 +9,7 @@ import { QueueItem } from '@/components/queue/queue-item'
 import { Button } from '@/components/shared/button'
 import { Tooltip } from '@/components/shared/tooltip'
 import { NewIdeaModal, type CreateFromPipeData } from '@/components/modals/new-idea-modal'
+import { ConfirmModal } from '@/components/modals/confirm-modal'
 import { getDefaultModel } from '@/config/model-catalog'
 
 export function QueueList() {
@@ -27,6 +28,7 @@ export function QueueList() {
   const closeNewIdeaModal = useUIStore((s) => s.closeNewIdeaModal)
 
   const [showArchive, setShowArchive] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const ideaList = ideas ?? []
 
@@ -103,14 +105,19 @@ export function QueueList() {
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (!window.confirm('Delete this idea and all its pipeline data? This cannot be undone.')) return
-      removeIdea({ id: id as Id<'ideas'> })
-      if (activeIdeaId === id) {
-        setActiveIdea(null)
-      }
+      setDeleteTarget(id)
     },
-    [removeIdea, activeIdeaId, setActiveIdea],
+    [],
   )
+
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget) return
+    removeIdea({ id: deleteTarget as Id<'ideas'> })
+    if (activeIdeaId === deleteTarget) {
+      setActiveIdea(null)
+    }
+    setDeleteTarget(null)
+  }, [deleteTarget, removeIdea, activeIdeaId, setActiveIdea])
 
   const handleDuplicate = useCallback(
     async (id: string) => {
@@ -198,6 +205,17 @@ export function QueueList() {
         onClose={closeNewIdeaModal}
         onCreateFromPipe={handleCreateFromPipe}
         onStartFromScratch={handleStartFromScratch}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete idea"
+        description="Delete this idea and all its pipeline data? This cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
       />
     </div>
   )

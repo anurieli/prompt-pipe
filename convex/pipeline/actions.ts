@@ -94,6 +94,22 @@ export const runPipeline = action({
       return
     }
 
+    // Validate seed prompt is not empty
+    if (!idea.prompt.trim()) {
+      const errorMsg = 'Seed prompt is empty. Enter a prompt before running the pipeline.'
+      await ctx.runMutation(internal.pipeline.mutations.updateRun, {
+        id: runId,
+        status: 'failed',
+        error: errorMsg,
+        completedAt: new Date().toISOString(),
+      })
+      await ctx.runMutation(internal.ideas.internalMutations.updateStatus, {
+        id: ideaId,
+        status: 'failed',
+      })
+      throw new Error(errorMsg)
+    }
+
     // Load default model from settings for fallback
     const defaultModelSetting = await ctx.runQuery(internal.settings.internalQueries.getSettingValue, {
       key: 'default_text_model',
@@ -478,10 +494,20 @@ export const dryRun = action({
       return { valid: false, errors: [{ stepIndex: 0, threadIndex: 0, error: 'Idea not found' }], estimatedCostUsd: 0 }
     }
 
+    if (!idea.prompt.trim()) {
+      return { valid: false, errors: [{ stepIndex: 0, threadIndex: 0, error: 'Seed prompt is empty' }], estimatedCostUsd: 0 }
+    }
+
     const steps = await ctx.runQuery(api.steps.queries.listByIdea, { ideaId: args.ideaId })
     if (steps.length === 0) {
       return { valid: false, errors: [{ stepIndex: 0, threadIndex: 0, error: 'No steps configured' }], estimatedCostUsd: 0 }
     }
+
+    // Load default model from settings (same fallback logic as runPipeline)
+    const defaultModelSetting = await ctx.runQuery(internal.settings.internalQueries.getSettingValue, {
+      key: 'default_text_model',
+    }) as string | null
+    const defaultModel = defaultModelSetting ?? ''
 
     const errors: Array<{ stepIndex: number; threadIndex: number; error: string }> = []
     let estimatedCostUsd = 0
@@ -519,8 +545,9 @@ export const dryRun = action({
           if (!apiKey) {
             errors.push({ stepIndex: step.stepIndex, threadIndex: thread.threadIndex, error: 'OpenRouter API key not configured' })
           }
-          if (!thread.model) {
-            errors.push({ stepIndex: step.stepIndex, threadIndex: thread.threadIndex, error: 'No model selected for OpenRouter thread' })
+          const effectiveModel = thread.model || defaultModel
+          if (!effectiveModel) {
+            errors.push({ stepIndex: step.stepIndex, threadIndex: thread.threadIndex, error: 'No model selected and no default model set in Settings' })
           }
         }
 
